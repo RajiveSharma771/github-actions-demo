@@ -20,16 +20,16 @@ jobs:
         run: docker rm -f github-actions-demo
 
       - name: Build Docker image
-        run: docker build -t github-actions-demo2 .
+        run: docker build -t github-actions-demo3 .
 
       - name: Run Docker container
-        run: docker run -d --name github-actions-demo -p 5000:5000 github-actions-demo2
+        run: docker run -d --name github-actions-demo3 -p 5000:5000 github-actions-demo3
 
       - name: Check container
         run: docker ps -a
 
       - name: Check container logs
-        run: docker logs github-actions-demo2
+        run: docker logs github-actions-demo3
 
       - name: Test application
         run: curl -v http://localhost:5000

@@ -6,7 +6,9 @@ on:
       - main
 
 jobs:
-  deploy:
+
+  build:
+    name: Build & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -15,9 +17,6 @@ jobs:
 
       - name: Show files
         run: ls -la
-      
-      - name: remove old container
-        run: docker rm -f github-actions-demo
 
       - name: Build Docker image
         run: docker build -t github-actions-demo .
@@ -31,25 +30,43 @@ jobs:
       - name: Check container logs
         run: docker logs github-actions-demo
 
-      - name: Test from inside container
-        run: |
-          docker exec github-actions-demo python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:5000').read().decode())"
-
-      - name: Test from runner
-        run: curl -v http://localhost:5000
-
       - name: Test application
         run: curl -v http://localhost:5000
 
-      - name: Test SSH connection
+
+  deploy:
+    name: Deploy to EC2
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+
           script: |
             cd /home/ubuntu/github-actions-demo
+
+            echo "Pulling latest code..."
             git pull origin main
+
+            echo "Removing old container..."
             docker rm -f github-actions-demo || true
+
+            echo "Building new Docker image..."
             docker build -t github-actions-demo .
-            docker run -d --name github-actions-demo -p 5000:5000 github-actions-demo
+
+            echo "Starting new container..."
+            docker run -d \
+              --name github-actions-demo \
+              -p 5000:5000 \
+              github-actions-demo
+
+            echo "Checking container..."
+            docker ps
+
+            echo "Checking application..."
+            curl -v http://localhost:5000

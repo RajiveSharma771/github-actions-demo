@@ -25,7 +25,7 @@ jobs:
       - name: Check container
         run: docker ps -a
       - name: docekr inspection
-      - run: docker logs github-actions-demo
+        run: docker logs github-actions-demo
 
       - name: Test application
         run: curl http://localhost:5000
